@@ -1,8 +1,11 @@
 ---
-import {Navbar} from '../components/navbar';
 import Layout from '../layouts/Layout.astro';
+import NavbarDemo from '@/components/NavbarDemo';
+import Camera from '@/components/Camera';
 ---
 
+
 <Layout>
-	  <Navbar />
+ <NavbarDemo client:load />
+  <Camera client:load />
 </Layout>
