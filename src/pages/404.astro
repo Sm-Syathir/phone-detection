@@ -1,0 +1,11 @@
+---
+// src/pages/404.astro
+import Layout from '../layouts/Layout.astro';
+import NotFound from '@/components/Notfound';
+---
+
+<div class="bg-black min-h-screen">
+	<Layout title="404 - Page Not Found">
+	  <NotFound client:load />
+</Layout>
+</div>

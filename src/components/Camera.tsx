@@ -10,20 +10,27 @@ const videoConstraints = {
   facingMode: "user"
 };
 
-export default function Camera() {
+export default function Camera({ onPhoneDetected, isBreak}) {
     
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const [isModelLoading, setIsModelLoading] = useState(true);
   const [phoneDetected, setPhoneDetected] = useState(false);
-  let modelRef = useRef(null);
+  const modelRef = useRef(null);
+  const audioRef = useRef(null); 
+  const lastCountTimeRef = useRef(0);
+
+  useEffect(() => {
+    audioRef.current = new Audio('/alert.mp3');
+    audioRef.current.volume = 1.0; 
+  }, []); 
 
   const capture = React.useCallback(() => {
     const imageSrc = webcamRef.current?.getScreenshot();
   }, [webcamRef]);
 
-
   useEffect(() => {
+
     const loadModel = async () => {
       console.log("Load model coco ssd");
       const loadedModel = await cocoSsd.load();
@@ -34,9 +41,9 @@ export default function Camera() {
     loadModel();
   }, []);
 
-
   useEffect(() => {
     if (isModelLoading) return;
+
 
     const detectFrame = async () => {
       if (
@@ -50,9 +57,22 @@ export default function Camera() {
           (prediction) => prediction.class === "cell phone"
         );
         
-        if (phones.length > 0) {
+        if (phones.length > 0 && !isBreak) {
           setPhoneDetected(true);
+          const now = Date.now();
+          if (now - lastCountTimeRef.current > 1000) { 
+            lastCountTimeRef.current = now;
+            if (onPhoneDetected) onPhoneDetected();
+          }
           console.log("Phone detected!");
+            
+            if (audioRef.current) {
+            audioRef.current.currentTime = 0; 
+            audioRef.current.play().catch(err => {
+              console.log("Gagal memutar suara:", err);
+            });
+          }
+
           Swal.fire({
   title: "Lock in!",
   text: "Please put your phone down and focus on your activities.",
@@ -69,8 +89,8 @@ export default function Camera() {
     const animationId = requestAnimationFrame(detectFrame);
     
     return () => cancelAnimationFrame(animationId);
-  }, [isModelLoading]);
-
+  }, [isModelLoading, isBreak]);
+  
   return (
     <>
       <div className="flex items-center justify-center h-180">
